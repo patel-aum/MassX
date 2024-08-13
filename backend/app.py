@@ -8,7 +8,6 @@ from cassandra.query import SimpleStatement
 import redis
 from uuid import UUID
 
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -33,10 +32,15 @@ session = cluster.connect('email_sender')
 # Connect to Redis
 redis_client = None
 try:
-    redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
-    redis_client.ping()  # Test the connection
-except redis.ConnectionError:
-    print("Warning: Redis connection failed. Caching will be disabled.")
+    redis_client = redis.StrictRedis(host='172.17.0.3', port=6379, db=0)
+    redis_client.ping()
+except redis.ConnectionError as e:
+    print(f"Warning: Redis connection failed. Error: {str(e)}")
+    print("Caching will be disabled.")
+    redis_client = None
+except Exception as e:
+    print(f"Unexpected error when connecting to Redis: {str(e)}")
+    redis_client = None
 
 def log_email(recipient_email, subject, body, status):
     query = SimpleStatement("""
@@ -136,12 +140,12 @@ def update_template(template_id):
     session.execute(query, (subject, body, template_id))
     return jsonify({"message": "Template updated successfully"}), 200
 
-@app.route('/templates/<template_id>', methods=['DELETE'])
-def delete_template(template_id):
-    query = SimpleStatement("DELETE FROM templates WHERE id=%s")
-    session.execute(query, (template_id,))
-    redis_client.delete(template_id)  # Remove from cache
-    return jsonify({"message": "Template deleted successfully"}), 200
+# @app.route('/templates/<template_id>', methods=['DELETE'])
+# def delete_template(template_id):
+#     query = SimpleStatement("DELETE FROM templates WHERE id=%s")
+#     session.execute(query, (template_id,))
+#     redis_client.delete(template_id)  # Remove from cache
+#     return jsonify({"message": "Template deleted successfully"}), 200
 
 @app.route('/recipients', methods=['POST'])
 def create_recipient():
@@ -189,20 +193,27 @@ def update_recipient(recipient_id):
     session.execute(query, (email, name, recipient_id))
     return jsonify({"message": "Recipient updated successfully"}), 201
 
-@app.route('/recipients/<recipient_id>', methods=['DELETE'])
-def delete_recipient(recipient_id):
+@app.route('/templates/<template_id>', methods=['DELETE'])
+def delete_template(template_id):
     try:
-        # Convert the recipient_id to UUID
-        recipient_uuid = UUID(recipient_id)
+        # Convert the template_id to UUID
+        template_uuid = UUID(template_id)
         
-        query = "DELETE FROM recipients WHERE id = %s"
-        session.execute(query, (recipient_uuid,))
+        query = SimpleStatement("DELETE FROM templates WHERE id=%s")
+        session.execute(query, (template_uuid,))
         
-        return jsonify({"message": "Recipient deleted"}), 200
+        if redis_client:
+            redis_client.delete(template_id)  # Remove from cache
+        
+        return jsonify({"message": "Template deleted successfully"}), 200
     except ValueError:
-        return jsonify({"error": "Invalid recipient ID format"}), 400
+        return jsonify({"error": "Invalid template ID format"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+print("Starting Flask application...")
 
 if __name__ == '__main__':
     app.run(debug=True)
+print("End of script")
 
