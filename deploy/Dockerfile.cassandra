@@ -1,0 +1,6 @@
+# Dockerfile.cassandra
+
+FROM cassandra:latest
+WORKDIR /app
+COPY cassandra-startup.sh ./cassandra-startup.sh
+RUN chmod +x ./cassandra-startup.sh

@@ -6,8 +6,7 @@ services:
     build:
       context: ./frontend
       dockerfile: ../deploy/Dockerfile.frontend
-    ports:
-      - "80:80"
+    network_mode: host
     volumes:
       - ../deploy/logs/frontend:/var/log/nginx
     depends_on:
@@ -18,30 +17,34 @@ services:
     build:
       context: ./backend
       dockerfile: ../deploy/Dockerfile.backend
-    ports:
-      - "5000:5000"
+    network_mode: host
     volumes:
       - ./deploy/logs/backend:/app/logs
+    environment:
+      CASSANDRA_HOST: localhost
+      REDIS_HOST: localhost
+    depends_on:
+      - cassandra
+      - redis
 
   cassandra:
-    image: cassandra:latest
+    build:
+      context: ./deploy
+      dockerfile: Dockerfile.cassandra
     container_name: cassandra_db
+    network_mode: host
     volumes:
-      - ./deploy/cassandra_data:/var/lib/cassandra
-    ports:
-      - "9042:9042"
+      - cassandra_data:/var/lib/cassandra
 
   redis:
     image: redis:latest
-    container_name: redis
+    container_name: redis_db
+    network_mode: host
     volumes:
       - ./deploy/redis_data:/data
-    ports:
-      - "6379:6379"
 
 volumes:
   cassandra_data:
   redis_data:
   frontend_logs:
   backend_logs:
- 

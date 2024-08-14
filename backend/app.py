@@ -25,9 +25,12 @@ app.config['CASSENDRA_HOST'] = os.getenv('CASSENDRA_HOST')
 
 mail = Mail(app)
 
+cassandra_host = os.getenv('CASSANDRA_HOST')
 # Connect to Cassandra
 #cluster = Cluster(['127.0.0.1'])
-cluster = Cluster(['CASSENDRA_HOST'])
+cluster = Cluster([os.getenv('CASSANDRA_HOST')])
+
+#cluster = Cluster([cassandra_host])
 session = cluster.connect('email_sender')
 
 # Connect to Redis

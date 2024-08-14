@@ -17,6 +17,9 @@ FROM openresty/openresty:alpine
 
 # Copy the React app build to OpenResty
 COPY --from=build /app/build /usr/local/openresty/nginx/html
+COPY ./nginx/localhost.crt /etc/nginx/ssl/localhost.crt
+COPY ./nginx/localhost.key /etc/nginx/ssl/localhost.key
+COPY ./nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 
 # Copy custom NGINX config
 COPY ./nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
