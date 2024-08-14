@@ -1,0 +1,15 @@
+# Backend Dockerfile
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY ./requirements.txt .
+#RUN python -m venv venv && \
+#    . venv/bin/activate && \
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+
+EXPOSE 5000
+CMD ["python", "app.py"]

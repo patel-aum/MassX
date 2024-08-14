@@ -21,18 +21,19 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS').lower() == 'true'
 app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL').lower() == 'true'
+app.config['CASSENDRA_HOST'] = os.getenv('CASSENDRA_HOST')
 
 mail = Mail(app)
 
 # Connect to Cassandra
 #cluster = Cluster(['127.0.0.1'])
-cluster = Cluster(['172.17.0.2'])
+cluster = Cluster(['CASSENDRA_HOST'])
 session = cluster.connect('email_sender')
 
 # Connect to Redis
 redis_client = None
 try:
-    redis_client = redis.StrictRedis(host='172.17.0.3', port=6379, db=0)
+    redis_client = redis.StrictRedis(host='REDIS_HOST', port=6379, db=0)
     redis_client.ping()
 except redis.ConnectionError as e:
     print(f"Warning: Redis connection failed. Error: {str(e)}")

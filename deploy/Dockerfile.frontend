@@ -1,0 +1,28 @@
+# Frontend Dockerfile
+
+# Stage 1: Build the React app
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY ./package*.json ./
+RUN npm install
+
+COPY ./ .
+
+RUN npm run build
+
+# Stage 2: Serve the app using OpenResty
+FROM openresty/openresty:alpine
+
+# Copy the React app build to OpenResty
+COPY --from=build /app/build /usr/local/openresty/nginx/html
+
+# Copy custom NGINX config
+COPY ./nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+
+# Expose port 80 for the web server
+EXPOSE 80
+
+# Start OpenResty
+CMD ["openresty", "-g", "daemon off;"]
