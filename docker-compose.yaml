@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   frontend:
     container_name: massmx-frontend
@@ -8,7 +7,7 @@ services:
       dockerfile: ../deploy/Dockerfile.frontend
     network_mode: host
     volumes:
-      - ../deploy/logs/frontend:/var/log/nginx
+      - frontend_logs:/var/log/nginx
     depends_on:
       - backend
 
@@ -19,13 +18,14 @@ services:
       dockerfile: ../deploy/Dockerfile.backend
     network_mode: host
     volumes:
-      - ./deploy/logs/backend:/app/logs
+      - backend_logs:/app/logs
     environment:
       CASSANDRA_HOST: localhost
       REDIS_HOST: localhost
     depends_on:
       - cassandra
       - redis
+    restart: always
 
   cassandra:
     build:
@@ -33,18 +33,113 @@ services:
       dockerfile: Dockerfile.cassandra
     container_name: cassandra_db
     network_mode: host
+      #ports:
+      # - "9042:9042"
+      # - "7199:7199" 
     volumes:
       - cassandra_data:/var/lib/cassandra
+    environment:
+      disk_access_mode: standard
+      JVM_OPTS: -Djava.rmi.server.hostname=cassandra
 
   redis:
     image: redis:latest
-    container_name: redis_db
+    container_name: mass-email-sender_redis
     network_mode: host
     volumes:
-      - ./deploy/redis_data:/data
+      - redis_data:/data
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    network_mode: host
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    network_mode: host
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:lts-jdk17
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    restart: always
+
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    depends_on:
+      - sonar_db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar_db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ports:
+      - "9001:9000"
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+
+  sonar_db:
+    image: postgres:13
+    container_name: sonar_db
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - sonar_db:/var/lib/postgresql
+      - sonar_db_data:/var/lib/postgresql/data
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    network_mode: host
+    command:
+      - '-nginx.scrape-uri=http://localhost:80/stub_status'
+
+  cassandra_exporter:
+    image: bitnami/cassandra-exporter
+    container_name: cassandra_exporter
+    ports:
+      - "9501:9500"  # Map container port 9500 to host port 9501
+    command:
+      - '-cassandra.host=cassandra'
+      - '-cassandra.port=7199'
+
+  redis_exporter:
+    image: bitnami/redis-exporter
+    container_name: redis_exporter
+    network_mode: host
 
 volumes:
   cassandra_data:
   redis_data:
   frontend_logs:
   backend_logs:
+  grafana_data:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
+  sonarqube_conf:
+  sonarqube_temp:
+  sonar_db:
+  sonar_db_data:

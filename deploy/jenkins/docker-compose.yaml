@@ -12,23 +12,57 @@ services:
     restart: always
 
   sonarqube:
-    container_name: sonarqube
     image: sonarqube:lts-community
-    ports:
-      - "9000:9000"
+    container_name: sonarqube
+    depends_on:
+      - sonar_db
     environment:
-      - SONAR_JDBC_URL=jdbc:postgresql://db:5432/sonar
-      - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar
+      SONAR_JDBC_URL: jdbc:postgresql://sonar_db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ports:
+      - "9001:9000"
     volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
       - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
-    restart: always
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+
+  sonar_db:
+    image: postgres:13
+    container_name: sonar_db
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - sonar_db:/var/lib/postgresql
+      - sonar_db_data:/var/lib/postgresql/data
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    network_mode: host
+    command:
+      - '-nginx.scrape-uri=http://localhost:80/stub_status'
+  cassandra_exporter:
+    image: bitnami/cassandra-exporter
+    container_name: cassandra_exporter
+    network_mode: host
+    command:
+      - '-cassandra.url=localhost:9042'
+  redis_exporter:
+    image: bitnami/redis-exporter
+    container_name: redis_exporter
+    network_mode: host
 
 volumes:
   jenkins_home:
   sonarqube_data:
   sonarqube_logs:
   sonarqube_extensions:
-
+  sonarqube_conf:
+  sonarqube_temp:
+  sonar_db:
+  sonar_db_data:  

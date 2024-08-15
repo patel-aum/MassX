@@ -7,6 +7,7 @@ from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
 import redis
 from uuid import UUID
+from prometheus_client import Counter, generate_latest
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,9 +35,11 @@ cluster = Cluster([os.getenv('CASSANDRA_HOST')])
 session = cluster.connect('email_sender')
 
 # Connect to Redis
+
+redis_host = os.getenv('REDIS_HOST', 'localhost')
 redis_client = None
 try:
-    redis_client = redis.StrictRedis(host='REDIS_HOST', port=6379, db=0)
+    redis_client = redis.StrictRedis(host=redis_host, port=6379, db=0)
     redis_client.ping()
 except redis.ConnectionError as e:
     print(f"Warning: Redis connection failed. Error: {str(e)}")
@@ -214,6 +217,12 @@ def delete_template(template_id):
         return jsonify({"error": "Invalid template ID format"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+REQUEST_COUNTER = Counter('requests_total', 'Total number of requests')
+@app.route('/metrics')
+def metrics():
+    return generate_latest()
+
 
 print("Starting Flask application...")
 
