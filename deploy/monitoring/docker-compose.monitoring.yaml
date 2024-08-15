@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    network_mode: host
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    network_mode: host
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    network_mode: host
+    command:
+      - '-nginx.scrape-uri=http://localhost:80/stub_status'
+
+  cassandra_exporter:
+    image: bitnami/cassandra-exporter
+    container_name: cassandra_exporter
+    network_mode: host
+    command:
+      - '-cassandra.host=localhost'
+      - '-cassandra.port=7199'
+    volumes:
+      - ./cassendra-exporter-config.yml:/opt/bitnami/cassandra-exporter/config.yml
+
+  redis_exporter:
+    image: bitnami/redis-exporter
+    container_name: redis_exporter
+    network_mode: host
+
+volumes:
+  grafana_data:
+  cassendra-exporter-config.yml:

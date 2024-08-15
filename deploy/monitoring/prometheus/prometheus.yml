@@ -20,7 +20,7 @@ scrape_configs:
 
   - job_name: 'cassandra'
     static_configs:
-      - targets: ['localhost:9042']
+      - targets: ['localhost:8081']
 
   - job_name: 'redis'
     static_configs:
