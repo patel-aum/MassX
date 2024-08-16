@@ -1,31 +1,5 @@
 version: '3.8'
 services:
-  frontend:
-    container_name: massmx-frontend
-    build:
-      context: ./frontend
-      dockerfile: ../deploy/Dockerfile.frontend
-    network_mode: host
-    volumes:
-      - frontend_logs:/var/log/nginx
-    depends_on:
-      - backend
-
-  backend:
-    container_name: massmx-backend
-    build:
-      context: ./backend
-      dockerfile: ../deploy/Dockerfile.backend
-    network_mode: host
-    volumes:
-      - backend_logs:/app/logs
-    environment:
-      CASSANDRA_HOST: localhost
-      REDIS_HOST: localhost
-    depends_on:
-      - cassandra
-      - redis
-    restart: always
 
   cassandra:
     build:
@@ -38,9 +12,12 @@ services:
       # - "7199:7199" 
     volumes:
       - cassandra_data:/var/lib/cassandra
+      - ./deploy/cassandra.yaml:/etc/cassandra/cassandra.yaml
     environment:
-      disk_access_mode: standard
-      JVM_OPTS: -Djava.rmi.server.hostname=cassandra
+      JVM_OPTS: >-
+        -Djava.rmi.server.hostname=cassandra
+        -Xms512M -Xmx512M
+        -XX:MaxGCPauseMillis=200
 
   redis:
     image: redis:latest
@@ -48,16 +25,6 @@ services:
     network_mode: host
     volumes:
       - redis_data:/data
-
-  jenkins:
-    container_name: jenkins
-    image: jenkins/jenkins:lts-jdk17
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-    restart: always
 
   sonarqube:
     image: sonarqube:lts-community
@@ -88,14 +55,9 @@ services:
       - sonar_db:/var/lib/postgresql
       - sonar_db_data:/var/lib/postgresql/data
 
-
-
 volumes:
   cassandra_data:
   redis_data:
-  frontend_logs:
-  backend_logs:
-  jenkins_home:
   sonarqube_data:
   sonarqube_logs:
   sonarqube_extensions:
