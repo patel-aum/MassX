@@ -36,4 +36,3 @@ CREATE TABLE IF NOT EXISTS email_logs (
     timestamp TIMESTAMP
 );
 EOF
-
