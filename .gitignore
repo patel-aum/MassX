@@ -4,6 +4,7 @@ node_modules/
 *.log
 /deploy/redis_data
 /deploy/cassandra_data
+/deploy/jenkins_home
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
