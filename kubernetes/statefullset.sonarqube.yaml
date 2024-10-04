@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sonarqube
+  namespace: sonarqube
+spec:
+  serviceName: sonarqube
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube
+  template:
+    metadata:
+      labels:
+        app: sonarqube
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: init-sysctl
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      - name: init-fs
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 1000:1000 /opt/sonarqube/data
+          chown -R 1000:1000 /opt/sonarqube/extensions
+          chown -R 1000:1000 /opt/sonarqube/temp
+        volumeMounts:
+        - name: sonarqube-data
+          mountPath: /opt/sonarqube/data
+        - name: sonarqube-extensions
+          mountPath: /opt/sonarqube/extensions
+        - name: sonarqube-temp
+          mountPath: /opt/sonarqube/temp
+      containers:
+      - name: sonarqube
+        image: sonarqube:latest
+        ports:
+        - containerPort: 9000
+          name: web
+        env:
+        - name: SONAR_ES_BOOTSTRAP_CHECKS_DISABLE
+          value: "true"
+        - name: SONAR_SEARCH_JAVAADDITIONALOPTS
+          value: "-Dnode.store.allow_mmap=false"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        volumeMounts:
+        - name: sonarqube-data
+          mountPath: /opt/sonarqube/data
+        - name: sonarqube-extensions
+          mountPath: /opt/sonarqube/extensions
+        - name: sonarqube-temp
+          mountPath: /opt/sonarqube/temp
+      volumes:
+      - name: sonarqube-temp
+        emptyDir: {}
+      - name: sonarqube-data
+        persistentVolumeClaim:
+          claimName: sonarqube-data
+      - name: sonarqube-extensions
+        persistentVolumeClaim:
+          claimName: sonarqube-extensions
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarqube
+  namespace: sonarqube
+spec:
+  selector:
+    app: sonarqube
+  ports:
+  - port: 9000
+    targetPort: 9000
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  password: MTIzNDU2Nzgk
+kind: Secret
+metadata:
+  name: sonarqube-db-secret
+  namespace: sonarqube
+type: Opaque
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-data
+  namespace: sonarqube
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-extensions
+  namespace: sonarqube
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

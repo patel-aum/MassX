@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: app
+data:
+  MAIL_SERVER: smtp.zoho.in
+  MAIL_PORT: "587"
+  MAIL_USERNAME: "your-email@example.com"
+  MAIL_PASSWORD: "your-password"
+  MAIL_USE_TLS: "True"
+  MAIL_USE_SSL: "False"
+  FLASK_ENV: development
+  CASSENDRA_HOST: "cassandra.default.svc.cluster.local"
+  REDIS_HOST: "redis.default.svc.cluster.local"
+  REDIS_PORT: "6379"
+

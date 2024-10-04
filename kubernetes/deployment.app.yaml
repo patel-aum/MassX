@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: massmx-frontend:latest  # Assuming the image is built separately
+        image: patelaum/massmx-frontend:latest  # Assuming the image is built separately
         volumeMounts:
         - name: frontend-logs
           mountPath: /var/log/nginx
@@ -26,15 +26,18 @@ spec:
             memory: "512Mi"
             cpu: "500m"
       - name: backend
-        image: massmx-backend:latest  # Assuming the image is built separately
+        image: patelaum/massmx-backend:latest  # Assuming the image is built separately
         volumeMounts:
         - name: backend-logs
           mountPath: /app/logs
-        env:
-        - name: CASSANDRA_HOST
-          value: "cassandra-service"  # Change to your actual service
-        - name: REDIS_HOST
-          value: "redis-service"  # Change to your actual service
+        envFrom:
+        - configMapRef:
+            name: app-config
+            #        env:
+            #        - name: CASSANDRA_HOST
+            #          value: "cassandra-service"  # Change to your actual service
+            #        - name: REDIS_HOST
+            #          value: "redis-service"  # Change to your actual service
         ports:
         - containerPort: 5000  # Adjust based on your backend
         resources:
