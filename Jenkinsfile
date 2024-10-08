@@ -6,12 +6,18 @@ pipeline {
         docker_hub = credentials('docker-hub')  // Jenkins secret for DockerHub username
         SONAR_TOKEN = credentials('sonarqube-token')          // Jenkins secret for SonarQube token
     }
+
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/patel-aum/massx.git'
+                script {
+                            git url: 'https://github.com/patel-aum/massx.git', branch: 'dev', credentialsId: 'github-creds' 
+                        }
+                    }
+                }
             }
         }
+
         stage('SonarQube Scan') {
             steps {
                 script {
