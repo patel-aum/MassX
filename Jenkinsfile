@@ -16,7 +16,7 @@ pipeline {
                     }
                 }
             }
-        }
+        
 
         stage('SonarQube Scan') {
             steps {
@@ -72,7 +72,7 @@ pipeline {
                 }
             }
         }
-    }
+    
     post {
         always {
             cleanWs()
@@ -85,4 +85,5 @@ pipeline {
         }
     }
 }
+
 
