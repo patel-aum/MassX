@@ -11,7 +11,7 @@ data:
   MAIL_USE_TLS: "True"
   MAIL_USE_SSL: "False"
   FLASK_ENV: development
-  CASSENDRA_HOST: "cassandra.default.svc.cluster.local"
-  REDIS_HOST: "redis.default.svc.cluster.local"
+  CASSANDRA_HOST: "cassandra-service.database.svc.cluster.local"
+  REDIS_HOST: "redis-service.database.svc.cluster.local"
   REDIS_PORT: "6379"
 

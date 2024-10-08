@@ -66,15 +66,7 @@ spec:
           name: cassandra-init-script
       - name: cassandra-data
         persistentVolumeClaim:
-          claimName: cassandra-data
-  volumeClaimTemplates:
-  - metadata:
-      name: cassandra-pvc
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 5Gi
+          claimName: cassandra-data-pvc
 ---
 apiVersion: v1
 kind: ConfigMap

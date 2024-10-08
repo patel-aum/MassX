@@ -71,10 +71,10 @@ spec:
         emptyDir: {}
       - name: sonarqube-data
         persistentVolumeClaim:
-          claimName: sonarqube-data
+          claimName: sonarqube-data-pvc
       - name: sonarqube-extensions
         persistentVolumeClaim:
-          claimName: sonarqube-extensions
+          claimName: sonarqube-extensions-pvc
 
 ---
 apiVersion: v1
@@ -99,29 +99,3 @@ metadata:
   namespace: sonarqube
 type: Opaque
 
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: sonarqube-data
-  namespace: sonarqube
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: sonarqube-extensions
-  namespace: sonarqube
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi
