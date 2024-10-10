@@ -1,1 +1,11 @@
-k create ns app && k create ns database && k create ns  jenkins && k create ns monitoring
+k create ns app && k create ns database && k create ns  jenkins && k create ns sonarqube
+install followig plugin in jenkins
+docker
+docker-build
+docker-pipeline
+sonarqube
+kubernetes
+kubernetes-cli
+kubernetes plugin
+
+
