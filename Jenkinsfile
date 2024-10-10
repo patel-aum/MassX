@@ -16,7 +16,7 @@ pipeline {
 		stage('Checkout') {
 		    steps {
 		        script {
-		            git url: 'https://github.com/patel-aum/massx.git', branch: 'dev', credentialsId: 'github-creds' 
+		            git url: 'https://github.com/patel-aum/massx.git', branch: 'production', credentialsId: 'github-creds' 
 		        }
 		    }
 		}
@@ -38,8 +38,6 @@ stage('SonarQube Scan') {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "trivy --version"
-
                     sh "${tool 'docker'}/bin/docker build -t ${backendImage} -f ./deploy/Dockerfile.backend ."
                     sh "${tool 'docker'}/bin/docker build -t ${frontendImage} -f ./deploy/Dockerfile.frontend ."
                 }
