@@ -38,8 +38,6 @@ stage('SonarQube Scan') {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "trivy --version"
-
                     sh "${tool 'docker'}/bin/docker build -t ${backendImage} -f ./deploy/Dockerfile.backend ."
                     sh "${tool 'docker'}/bin/docker build -t ${frontendImage} -f ./deploy/Dockerfile.frontend ."
                 }
