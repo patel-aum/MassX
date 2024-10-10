@@ -15,6 +15,49 @@ spec:
       labels:
         app: jenkins
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+      - name: docker-permission
+        image: busybox
+        command: ['sh', '-c', 'chown root:1000 /var/run/docker.sock && chmod 660 /var/run/docker.sock']
+        volumeMounts:
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+        securityContext:
+          runAsUser: 0
+      - name: install-trivy
+        image: debian:stable-slim
+        command:
+        - sh
+        - -c
+        - |
+          apt-get update
+          apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
+          apt-get update
+          apt-get install -y trivy
+          mkdir -p /var/jenkins_home/bin
+          cp $(which trivy) /var/jenkins_home/bin/trivy
+          chmod +x /var/jenkins_home/bin/trivy
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+        securityContext:
+          runAsUser: 0
+      - name: install-kubectl
+        image: bitnami/kubectl:latest
+        command:
+        - sh
+        - -c
+        - |
+          cp /opt/bitnami/kubectl/bin/kubectl /var/jenkins_home/bin/kubectl
+          chmod +x /var/jenkins_home/bin/kubectl
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
       containers:
       - name: jenkins
         image: jenkins/jenkins:lts
@@ -24,18 +67,18 @@ spec:
         volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
-        - name: docker-sock
+        - name: docker-socket
           mountPath: /var/run/docker.sock
+        env:
+        - name: PATH
+          value: /opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/var/jenkins_home/bin
       volumes:
       - name: jenkins-home
         persistentVolumeClaim:
           claimName: jenkins-pvc
-      - name: docker-sock
+      - name: docker-socket
         hostPath:
           path: /var/run/docker.sock
-      securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
 ---
 apiVersion: v1
 kind: Service
@@ -54,5 +97,4 @@ spec:
     protocol: TCP
   selector:
     app: jenkins
-  type: NodePort  
-
+  type: NodePort
