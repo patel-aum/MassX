@@ -1,47 +1,146 @@
 # MassX Project
-![Screenshot from 2024-08-14 16-11-43](https://github.com/user-attachments/assets/7865dbf8-135f-4c3f-a5c8-3bbdc447645e)
 
+An enterprise-grade mass mailing solution with robust DevOps infrastructure. Send millions of emails efficiently while maintaining deliverability and scalability.
 
-This project, named MassX, comprises a frontend built using React and a backend implemented with Flask. It utilizes various technologies and services to ensure efficient deployment and robust security.
+## 📧 Key Features
 
-## Deployment Plan
+- **High-throughput Email Processing**: Capable of sending millions of emails per day
+- **Email Templating**: Customizable templates for personalized mass communications
+- **Bounce Handling**: Automated processing of bounced emails
+- **Deliverability Optimization**: Built-in practices to ensure high delivery rates
+- **Analytics Dashboard**: Track open rates, click rates, and other key metrics
+- **List Management**: Efficient handling of subscriber lists and segmentation
 
-The deployment process adheres to the following steps:
+## 🏗️ Infrastructure Features
 
-1. **Image Creation:** A Docker image is constructed for the application.
-2. **Quality Gates:** The code undergoes scrutiny through SonarQube for code quality and security checks.
-3. **Security Scanning:** Trivy scans the Docker image for vulnerabilities.
-4. **Docker Registry:** The image is pushed to a Docker registry for storage and distribution.
-5. **Cloud Deployment:** The image is deployed to an EC2 instance on the cloud.
+- AWS infrastructure provisioned with Terraform for optimal email throughput
+- Kubernetes cluster for scalable email processing
+- Jenkins integration for automated deployment of email templates and configurations
+- SonarQube for code quality analysis ensuring reliable email service
+- Containerized application deployment for consistent environments
 
-## Technology Stack
+## 📋 Prerequisites
 
-- **Frontend:** React
-- **Backend:** Flask
-- **Caching:** Redis
-- **Database:** Cassandra DB
-- **Deployment:** Jenkins, Docker, AWS
-- **Security:** SonarQube, Trivy
+Ensure you have the following tools installed:
 
-## Additional Components
+- [Terraform](https://www.terraform.io/downloads) for infrastructure provisioning
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) for Kubernetes management
+- [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [Docker](https://docs.docker.com/get-docker/)
 
-- **SMTP Server:** Handles email functionalities.
-- **GitHub:** Version control and CI/CD integration.
+## 🛠️ Setup Guide
 
-## Future Enhancements
+### 1. Configure SMTP Servers
 
-- Explore integration with additional cloud providers.
-- Implement advanced monitoring and logging.
-- Consider microservices architecture for scalability.
+Create a `.env` file with your SMTP server details. Multiple SMTP servers can be configured for increased throughput:
 
-## Contributing
+```bash
+# Primary SMTP Server
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-email@example.com
+SMTP_PASS=your-email-password
 
-Feel free to contribute to the project by:
+# Add more SMTP servers as needed for higher throughput
+```
 
-- Submitting bug reports
-- Suggesting new features
-- Providing code improvements
+### 2. AWS Infrastructure Provisioning
 
-## Contact
+Deploy the required AWS infrastructure with high network capacity for email sending:
 
-For any inquiries, please contact Aum at [aump6633@gmail.com](mailto:aump6633@gmail.com).
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+### 3. Kubernetes Setup
+
+SSH into AWS instances and run the setup script:
+
+```bash
+./setup.sh
+```
+
+### 4. Repository Setup
+
+```bash
+git clone https://github.com/your-repo/massx.git
+cd massx
+```
+
+### 5. Create Kubernetes Namespaces
+
+```bash
+kubectl create ns app
+kubectl create ns database
+kubectl create ns jenkins
+kubectl create ns sonarqube
+```
+
+### 6. Deploy Kubernetes Resources
+
+```bash
+kubectl apply -f ./kubernetes
+```
+
+### 7. Security Configuration
+
+Configure AWS Security Groups to open required ports:
+- 80, 443 (Email Web Interface)
+- 8080 (Jenkins)
+- 9000 (SonarQube)
+- 25, 587, 465 (SMTP Ports - configure based on your providers)
+
+## 📧 Email Configuration
+
+### DKIM and SPF Setup
+
+1. Configure DKIM keys for each sending domain
+2. Set up SPF records for improved deliverability
+3. Implement DMARC policies
+
+Example DNS records:
+```
+# SPF Record
+v=spf1 include:_spf.massx.com ~all
+
+# DKIM Record
+massx._domainkey IN TXT "v=DKIM1; k=rsa; p=YOUR_PUBLIC_KEY"
+```
+
+### Rate Limiting
+
+Configure email rate limits in `config.yaml`:
+```yaml
+ratelimits:
+  per_second: 50
+  per_minute: 3000
+  per_hour: 100000
+```
+
+## 📊 Monitoring
+
+- Monitor email queues through the Kubernetes dashboard
+- Track delivery rates and bounces in the application UI
+- Set up alerts for delivery issues or high bounce rates
+
+## 🔍 Troubleshooting
+
+Common issues and solutions:
+- **High bounce rates**: Check sender reputation and DKIM/SPF setup
+- **Low throughput**: Verify SMTP server connections and rate limits
+- **Template rendering issues**: Validate template syntax and data formats
+
+## 📝 Notes
+
+- Regularly monitor IP reputation for optimal deliverability
+- Implement proper warming up procedures for new IP addresses
+- Follow email best practices to maintain high sender reputation
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
