@@ -1,6 +1,28 @@
 # MassX Project
 
+![Screenshot from 2024-08-14 16-11-43](https://github.com/user-attachments/assets/7865dbf8-135f-4c3f-a5c8-3bbdc447645e)
+
+
 An enterprise-grade mass mailing solution with robust DevOps infrastructure. Send millions of emails efficiently while maintaining deliverability and scalability.
+
+## Deployment Plan
+
+The deployment process adheres to the following steps:
+
+1. **Image Creation:** A Docker image is constructed for the application.
+2. **Quality Gates:** The code undergoes scrutiny through SonarQube for code quality and security checks.
+3. **Security Scanning:** Trivy scans the Docker image for vulnerabilities.
+4. **Docker Registry:** The image is pushed to a Docker registry for storage and distribution.
+5. **Cloud Deployment:** The image is deployed to an EC2 instance on the cloud.
+
+## Technology Stack
+
+- **Frontend:** React
+- **Backend:** Flask
+- **Caching:** Redis
+- **Database:** Cassandra DB
+- **Deployment:** Jenkins, Docker, AWS
+- **Security:** SonarQube, Trivy
 
 ## 📧 Key Features
 
@@ -67,7 +89,7 @@ SSH into AWS instances and run the setup script:
 ### 4. Repository Setup
 
 ```bash
-git clone https://github.com/your-repo/massx.git
+git clone https://github.com/patel-aum/massx.git
 cd massx
 ```
 
@@ -94,53 +116,29 @@ Configure AWS Security Groups to open required ports:
 - 9000 (SonarQube)
 - 25, 587, 465 (SMTP Ports - configure based on your providers)
 
-## 📧 Email Configuration
+### 8. Jenkins Setup
+Required Plugins
 
-### DKIM and SPF Setup
+Docker & Docker Pipeline
+SonarQube Scanner
+Kubernetes & Kubernetes CLI
 
-1. Configure DKIM keys for each sending domain
-2. Set up SPF records for improved deliverability
-3. Implement DMARC policies
+- Credentials Setup
+Add the following to Jenkins credentials:
 
-Example DNS records:
-```
-# SPF Record
-v=spf1 include:_spf.massx.com ~all
+GitHub credentials - github-creds
+SonarQube token - sonarqube-token
+Docker Hub credentials - docker-hub
 
-# DKIM Record
-massx._domainkey IN TXT "v=DKIM1; k=rsa; p=YOUR_PUBLIC_KEY"
-```
 
-### Rate Limiting
+### 9. Configure Kubernetes in Jenkins
+Use the withKubeCredentials directive to generate the syntax for configuring kubectl in Jenkins. This will allow Jenkins to interact with your Kubernetes cluster.
 
-Configure email rate limits in `config.yaml`:
-```yaml
-ratelimits:
-  per_second: 50
-  per_minute: 3000
-  per_hour: 100000
-```
+withKubeConfig([credentialsId: 'your-k8s-credentials', namespace: 'app']) {
+    sh 'kubectl get pods'
+}
 
-## 📊 Monitoring
 
-- Monitor email queues through the Kubernetes dashboard
-- Track delivery rates and bounces in the application UI
-- Set up alerts for delivery issues or high bounce rates
+### 10. Application Deployment
 
-## 🔍 Troubleshooting
-
-Common issues and solutions:
-- **High bounce rates**: Check sender reputation and DKIM/SPF setup
-- **Low throughput**: Verify SMTP server connections and rate limits
-- **Template rendering issues**: Validate template syntax and data formats
-
-## 📝 Notes
-
-- Regularly monitor IP reputation for optimal deliverability
-- Implement proper warming up procedures for new IP addresses
-- Follow email best practices to maintain high sender reputation
-
-## 🤝 Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
+Once the above steps are complete, your application should be deployed on the Kubernetes cluster. Use Jenkins to trigger the pipeline for building Docker images, running SonarQube checks, and deploying to Kubernetes.
