@@ -1,0 +1,58 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: frontend-logs-pv
+  namespace: app
+  labels:
+    app: frontend
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/frontend_logs  
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: frontend-logs-pvc
+  namespace: app
+  labels:
+    app: frontend
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: backend-logs-pv
+  namespace: app
+  labels:
+    app: backend
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/backend_logs  
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-logs-pvc
+  namespace: app
+  labels:
+    app: backend
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

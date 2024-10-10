@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+
+  name: cassandra-data-pv
+  namespace: database
+  labels:
+    claim: casandara
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/cassandra  
+---
+
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: cassandra-data
+#   namespace: database
+#   labels:
+#     claim: casandara-data
+# spec:
+#   capacity:
+#     storage: 3Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: /mnt/data/cassandra
+# ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cassandra-data-pvc
+  namespace: database
+  labels:
+    claim: casandara-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-data-pv
+  namespace: database
+  labels:
+    claim: redis
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/redis  # Adjust based on your environment
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+  namespace: database
+  labels:
+    claim: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: massmx-app
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: massmx
+  template:
+    metadata:
+      labels:
+        app: massmx
+    spec:
+      containers:
+      - name: frontend
+        image: patelaum/massmx-frontend:latest 
+        volumeMounts:
+        - name: frontend-logs
+          mountPath: /var/log/nginx
+        ports:
+        - containerPort: 80  
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      - name: backend
+        image: patelaum/massmx-backend:latest  
+        volumeMounts:
+        - name: backend-logs
+          mountPath: /app/logs
+        envFrom:
+        - configMapRef:
+            name: app-config
+            #        env:
+            #        - name: CASSANDRA_HOST
+            #          value: "cassandra-service"  # Change to your actual service
+            #        - name: REDIS_HOST
+            #          value: "redis-service"  # Change to your actual service
+        ports:
+        - containerPort: 5000  
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: frontend-logs
+        persistentVolumeClaim:
+          claimName: frontend-logs-pvc
+      - name: backend-logs
+        persistentVolumeClaim:
+          claimName: backend-logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: app
+spec:
+  selector:
+    app: massmx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort  # Or LoadBalancer depending on your setup
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: app
+spec:
+  selector:
+    app: massmx
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: NodePort  # Or LoadBalancer depending on your setup
+

@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cassandra-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/cassandra"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cassandra
+spec:
+  serviceName: cassandra
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      terminationGracePeriodSeconds: 1800
+      containers:
+      - name: cassandra
+        image: cassandra:latest
+        ports:
+        - containerPort: 7000
+          name: intra-node
+        - containerPort: 7001
+          name: tls-intra-node
+        - containerPort: 7199
+          name: jmx
+        - containerPort: 9042
+          name: cql
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 1Gi
+          requests:
+            cpu: "500m"
+            memory: 1Gi
+        volumeMounts:
+        - name: cassandra-data
+          mountPath: /var/lib/cassandra
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      initContainers:
+      - name: init-script
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cat <<EOF > /docker-entrypoint-initdb.d/init-script.cql
+          CREATE KEYSPACE IF NOT EXISTS email_sender WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+          USE email_sender;
+          CREATE TABLE IF NOT EXISTS templates (
+              id UUID PRIMARY KEY,
+              name TEXT,
+              subject TEXT,
+              body TEXT
+          );
+          CREATE TABLE IF NOT EXISTS recipients (
+              id UUID PRIMARY KEY,
+              email TEXT,
+              name TEXT
+          );
+          CREATE TABLE IF NOT EXISTS email_logs (
+              id UUID PRIMARY KEY,
+              recipient_email TEXT,
+              subject TEXT,
+              body TEXT,
+              status TEXT,
+              timestamp TIMESTAMP
+          );
+          EOF
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: cassandra-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+spec:
+  clusterIP: None
+  selector:
+    app: cassandra
+  ports:
+  - port: 9042
+    name: cql 
