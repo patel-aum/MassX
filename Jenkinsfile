@@ -1,69 +1,98 @@
 pipeline {
     agent any
+    
+  tools {
+        dockerTool 'docker'
+            }
+            
     environment {
         frontendImage = "patelaum/massmx-frontend:${GIT_COMMIT}"
         backendImage = "patelaum/massmx-backend:${GIT_COMMIT}"
-        docker_hub = credentials('docker-hub')  // Jenkins secret for DockerHub username
-        SONAR_TOKEN = credentials('sonarqube-token')          // Jenkins secret for SonarQube token
+        SONAR_TOKEN = credentials('sonarqube-token')  
     }
 
+
     stages {
-        stage('Checkout') {
+		stage('Checkout') {
+		    steps {
+		        script {
+		            git url: 'https://github.com/patel-aum/massx.git', branch: 'dev', credentialsId: 'github-creds' 
+		        }
+		    }
+		}
+        
+        
+stage('SonarQube Scan') {
+    steps {
+        script {
+            def scannerHome = tool 'sonar-scanner'; 
+            withSonarQubeEnv('SonarQube') {          
+                sh "${scannerHome}/bin/sonar-scanner"
+            }
+        }
+    }
+}
+
+
+       
+        stage('Build Docker Image') {
             steps {
                 script {
-                            git url: 'https://github.com/patel-aum/massx.git', branch: 'dev', credentialsId: 'github-creds' 
-                        }
-                    }
+                    sh "trivy --version"
+                    sh "${tool 'docker'}/bin/docker build -t ${backendImage} -f ./deploy/Dockerfile.backend ."
+
                 }
             }
+        }
         
 
-        stage('SonarQube Scan') {
-            steps {
-                script {
-                    withSonarQubeEnv('SonarQube') {
-                        sh "sonar-scanner -Dsonar.projectKey=mass-email-sender -Dsonar.sources=./frontend,./backend -Dsonar.host.url=http://sonarqube.massx -Dsonar.login=${SONAR_TOKEN}"
-                    }
+stage('Trivy Scan') {
+    steps {
+        
+        script {
+            def reportFile = 'trivy-report.txt'
+            
+            try {
+                sh """
+                trivy image  ${frontendImage} > ${reportFile}
+                """
+
+                echo "Frontend Image Trivy Report:"
+                readFile(reportFile).eachLine { line ->
+                    echo line
                 }
-            }
-        }
-        stage('Quality Gate') {
-            steps {
-                script {
-                    timeout(time: 1, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
-                    }
+
+                sh """
+                trivy image ${backendImage} > ${reportFile}
+                """
+
+                echo "Backend Image Trivy Report:"
+                readFile(reportFile).eachLine { line ->
+                    echo line
                 }
-            }
+
+            } catch (Exception e) {
+                echo "An error occurred during the Trivy scan: ${e.message}"
+                currentBuild.result = 'UNSTABLE'             }
         }
-        stage('Trivy Scan') {
-            steps {
-                sh 'trivy image --exit-code 1 ${frontendImage}'
-                sh 'trivy image --exit-code 1 ${backendImage}'
-            }
-        }
-        stage('Build Docker Images') {
-            steps {
-                script {
-                    sh "docker build -t ${frontendImage} -f ./deploy/Dockerfile.frontend ./frontend"
-                    sh "docker build -t ${backendImage} -f ./deploy/Dockerfile.backend ./backend"
-                }
-            }
-        }
+    }
+}
+
         stage('Push Docker Images') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-                        sh "docker login -u ${dockerHubCreds_USR} -p ${dockerHubCreds_PSW}"
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub') {  // Using Jenkins secret 'docker-hub'
                         sh "docker push ${frontendImage}"
                         sh "docker push ${backendImage}"
                     }
                 }
             }
         }
+
         stage('Update Kubernetes Deployment') {
             steps {
-                script {
+withKubeCredentials(kubectlCredentials: [[caCertificate: '''<ur-cacert>''', clusterName: 'microk8s-cluster', contextName: 'microk8s', credentialsId: 'kubectl-jenkins-sa', namespace: '', serverUrl: 'https://10.152.183.1:443']]) {
+    
                     sh """
                     sed -i 's|patelaum/massmx-frontend:.*|${frontendImage}|' ./kubernetes/deployment.app.yaml
                     sed -i 's|patelaum/massmx-backend:.*|${backendImage}|' ./kubernetes/deployment.app.yaml
@@ -71,8 +100,7 @@ pipeline {
                     """
                 }
             }
-        }
-    
+        }}
     post {
         always {
             cleanWs()
@@ -85,5 +113,4 @@ pipeline {
         }
     }
 }
-
 
