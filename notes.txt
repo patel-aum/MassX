@@ -7,4 +7,3 @@ sonarqube
 kubernetes
 kubernetes-cli
 kubernetes plugin
-
