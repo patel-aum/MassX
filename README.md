@@ -1,6 +1,5 @@
 # MassX Project
-
-![Screenshot from 2024-08-14 16-11-43](https://github.com/user-attachments/assets/7865dbf8-135f-4c3f-a5c8-3bbdc447645e)
+<img src="https://github.com/user-attachments/assets/73bd0255-0e53-4dc2-9d7b-48b63db06eb1" alt="MassX drawio" width="1000" height="800">
 
 
 An enterprise-grade mass mailing solution with robust DevOps infrastructure. Send millions of emails efficiently while maintaining deliverability and scalability.
