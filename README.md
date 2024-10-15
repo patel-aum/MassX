@@ -24,7 +24,6 @@ The deployment process adheres to the following steps:
 - **Security:** SonarQube, Trivy
 
 ## 📧 Key Features
-
 - **High-throughput Email Processing**: Capable of sending millions of emails per day
 - **Email Templating**: Customizable templates for personalized mass communications
 - **Bounce Handling**: Automated processing of bounced emails
