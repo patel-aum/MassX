@@ -1,6 +1,5 @@
 # MassX Project
-
-![Screenshot from 2024-08-14 16-11-43](https://github.com/user-attachments/assets/7865dbf8-135f-4c3f-a5c8-3bbdc447645e)
+<img src="https://github.com/user-attachments/assets/73bd0255-0e53-4dc2-9d7b-48b63db06eb1" alt="MassX drawio" width="1000" height="800">
 
 
 An enterprise-grade mass mailing solution with robust DevOps infrastructure. Send millions of emails efficiently while maintaining deliverability and scalability.
@@ -25,7 +24,6 @@ The deployment process adheres to the following steps:
 - **Security:** SonarQube, Trivy
 
 ## 📧 Key Features
-
 - **High-throughput Email Processing**: Capable of sending millions of emails per day
 - **Email Templating**: Customizable templates for personalized mass communications
 - **Bounce Handling**: Automated processing of bounced emails
@@ -142,4 +140,3 @@ withKubeConfig([credentialsId: 'your-k8s-credentials', namespace: 'app']) {
 ### 10. Application Deployment
 
 Once the above steps are complete, your application should be deployed on the Kubernetes cluster. Use Jenkins to trigger the pipeline for building Docker images, running SonarQube checks, and deploying to Kubernetes.
-

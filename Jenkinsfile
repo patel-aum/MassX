@@ -16,7 +16,7 @@ pipeline {
 		stage('Checkout') {
 		    steps {
 		        script {
-		            git url: 'https://github.com/patel-aum/massx.git', branch: 'production', credentialsId: 'github-creds' 
+		            git url: 'https://github.com/patel-aum/massx.git', branch: 'dev', credentialsId: 'github-creds' 
 		        }
 		    }
 		}
